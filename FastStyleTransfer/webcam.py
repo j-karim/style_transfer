@@ -8,6 +8,7 @@ PRESERVE_COLOR = False
 WIDTH = 1280
 HEIGHT = 720
 
+
 def webcam(style_transform_path, width=1280, height=720):
     """
     Captures and saves an image, perform style transfer, and again saves the styled image.
@@ -39,7 +40,7 @@ def webcam(style_transform_path, width=1280, height=720):
 
             # Free-up unneeded cuda memory
             torch.cuda.empty_cache()
-            
+
             # Generate image
             content_tensor = utils.itot(img).to(device)
             generated_tensor = net(content_tensor)
@@ -51,11 +52,12 @@ def webcam(style_transform_path, width=1280, height=720):
 
             # Show webcam
             cv2.imshow('Demo webcam', generated_image)
-            if cv2.waitKey(1) == 27: 
+            if cv2.waitKey(1) == 27:
                 break  # esc to quit
-            
+
     # Free-up memories
     cam.release()
     cv2.destroyAllWindows()
+
 
 webcam(STYLE_TRANSFORM_PATH, WIDTH, HEIGHT)

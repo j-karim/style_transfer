@@ -9,6 +9,7 @@ import cv2
 STYLE_TRANSFORM_PATH = "transforms/udnie_aggressive.pth"
 PRESERVE_COLOR = False
 
+
 def stylize():
     # Device
     device = ("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,7 +20,7 @@ def stylize():
     net = net.to(device)
 
     with torch.no_grad():
-        while(1):
+        while (1):
             torch.cuda.empty_cache()
             print("Stylize Image~ Press Ctrl+C and Enter to close the program")
             content_image_path = input("Enter the image path: ")
@@ -33,6 +34,7 @@ def stylize():
             print("Transfer Time: {}".format(time.time() - starttime))
             utils.show(generated_image)
             utils.saveimg(generated_image, "helloworld.jpg")
+
 
 def stylize_folder_single(style_path, content_folder, save_folder):
     """
@@ -66,7 +68,7 @@ def stylize_folder_single(style_path, content_folder, save_folder):
         for image_name in images:
             # Free-up unneeded cuda memory
             torch.cuda.empty_cache()
-            
+
             # Load content image
             content_image = utils.load_image(content_folder + image_name)
             content_tensor = utils.itot(content_image).to(device)
@@ -78,6 +80,7 @@ def stylize_folder_single(style_path, content_folder, save_folder):
                 generated_image = utils.transfer_color(content_image, generated_image)
             # Save image
             utils.saveimg(generated_image, save_folder + image_name)
+
 
 def stylize_folder(style_path, folder_containing_the_content_folder, save_folder, batch_size=1):
     """Stylizes images in a folder by batch
@@ -132,4 +135,4 @@ def stylize_folder(style_path, folder_containing_the_content_folder, save_folder
                 image_name = os.path.basename(path[i])
                 utils.saveimg(generated_image, save_folder + image_name)
 
-#stylize()
+# stylize()

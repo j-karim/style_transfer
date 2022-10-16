@@ -3,6 +3,7 @@ import torch.nn as nn
 from torchvision import models, transforms
 import utils
 
+
 class VGG19(nn.Module):
     def __init__(self, vgg_path="models/vgg19-d01eb7cb.pth"):
         super(VGG19, self).__init__()
@@ -25,6 +26,7 @@ class VGG19(nn.Module):
 
         return features
 
+
 class VGG16(nn.Module):
     def __init__(self, vgg_path="models/vgg16-00b39a1b.pth"):
         super(VGG16, self).__init__()
@@ -44,7 +46,7 @@ class VGG16(nn.Module):
             x = layer(x)
             if name in layers:
                 features[layers[name]] = x
-                if (name=='22'):
+                if (name == '22'):
                     break
 
         return features
