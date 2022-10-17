@@ -2,9 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 import random
 import numpy as np
 import time
+
+from tqdm import tqdm
 
 import vgg
 import transformer
@@ -44,25 +47,25 @@ def train():
         transforms.Lambda(lambda x: x.mul(255))
     ])
     train_dataset = datasets.ImageFolder(DATASET_PATH, transform=transform)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
     # Load networks
-    TransformerNetwork = transformer.TransformerNetwork().to(device)
-    VGG = vgg.VGG16().to(device)
+    transformer_network = transformer.TransformerNetwork().to(device)
+    vgg_net = vgg.VGG16().to(device)
 
     # Get Style Features
     imagenet_neg_mean = torch.tensor([-103.939, -116.779, -123.68], dtype=torch.float32).reshape(1, 3, 1, 1).to(device)
     style_image = utils.load_image(STYLE_IMAGE_PATH)
     style_tensor = utils.itot(style_image).to(device)
     style_tensor = style_tensor.add(imagenet_neg_mean)
-    B, C, H, W = style_tensor.shape
-    style_features = VGG(style_tensor.expand([BATCH_SIZE, C, H, W]))
+    b, c, h, w = style_tensor.shape
+    style_features = vgg_net(style_tensor.expand([BATCH_SIZE, c, h, w]))
     style_gram = {}
     for key, value in style_features.items():
         style_gram[key] = utils.gram(value)
 
     # Optimizer settings
-    optimizer = optim.Adam(TransformerNetwork.parameters(), lr=ADAM_LR)
+    optimizer = optim.Adam(transformer_network.parameters(), lr=ADAM_LR)
 
     # Loss trackers
     content_loss_history = []
@@ -77,7 +80,7 @@ def train():
     start_time = time.time()
     for epoch in range(NUM_EPOCHS):
         print("========Epoch {}/{}========".format(epoch + 1, NUM_EPOCHS))
-        for content_batch, _ in train_loader:
+        for content_batch, _ in tqdm(train_loader, total=len(train_loader), desc=f'Epoch {epoch}'):
             # Get current batch size in case of odd batch sizes
             curr_batch_size = content_batch.shape[0]
 
@@ -89,19 +92,19 @@ def train():
 
             # Generate images and get features
             content_batch = content_batch[:, [2, 1, 0]].to(device)
-            generated_batch = TransformerNetwork(content_batch)
-            content_features = VGG(content_batch.add(imagenet_neg_mean))
-            generated_features = VGG(generated_batch.add(imagenet_neg_mean))
+            generated_batch = transformer_network(content_batch)
+            content_features = vgg_net(content_batch.add(imagenet_neg_mean))
+            generated_features = vgg_net(generated_batch.add(imagenet_neg_mean))
 
             # Content Loss
-            MSELoss = nn.MSELoss().to(device)
-            content_loss = CONTENT_WEIGHT * MSELoss(generated_features['relu2_2'], content_features['relu2_2'])
+            mse_loss = nn.MSELoss().to(device)
+            content_loss = CONTENT_WEIGHT * mse_loss(generated_features['relu2_2'], content_features['relu2_2'])
             batch_content_loss_sum += content_loss
 
             # Style Loss
             style_loss = 0
             for key, value in generated_features.items():
-                s_loss = MSELoss(utils.gram(value), style_gram[key][:curr_batch_size])
+                s_loss = mse_loss(utils.gram(value), style_gram[key][:curr_batch_size])
                 style_loss += s_loss
             style_loss *= STYLE_WEIGHT
             batch_style_loss_sum += style_loss.item()
@@ -115,7 +118,7 @@ def train():
             optimizer.step()
 
             # Save Model and Print Losses
-            if (((batch_count - 1) % SAVE_MODEL_EVERY == 0) or (batch_count == NUM_EPOCHS * len(train_loader))):
+            if ((batch_count - 1) % SAVE_MODEL_EVERY == 0) or (batch_count == NUM_EPOCHS * len(train_loader)):
                 # Print Losses
                 print("========Iteration {}/{}========".format(batch_count, NUM_EPOCHS * len(train_loader)))
                 print("\tContent Loss:\t{:.2f}".format(batch_content_loss_sum / batch_count))
@@ -125,7 +128,7 @@ def train():
 
                 # Save Model
                 checkpoint_path = SAVE_MODEL_PATH + "checkpoint_" + str(batch_count - 1) + ".pth"
-                torch.save(TransformerNetwork.state_dict(), checkpoint_path)
+                torch.save(transformer_network.state_dict(), checkpoint_path)
                 print("Saved TransformerNetwork checkpoint file at {}".format(checkpoint_path))
 
                 # Save sample generated image
@@ -155,15 +158,15 @@ def train():
     print(total_loss_history)
 
     # Save TransformerNetwork weights
-    TransformerNetwork.eval()
-    TransformerNetwork.cpu()
+    transformer_network.eval()
+    transformer_network.cpu()
     final_path = SAVE_MODEL_PATH + "transformer_weight.pth"
     print("Saving TransformerNetwork weights at {}".format(final_path))
-    torch.save(TransformerNetwork.state_dict(), final_path)
+    torch.save(transformer_network.state_dict(), final_path)
     print("Done saving final model")
 
     # Plot Loss Histories
-    if (PLOT_LOSS):
+    if PLOT_LOSS:
         utils.plot_loss_hist(content_loss_history, style_loss_history, total_loss_history)
 
 
