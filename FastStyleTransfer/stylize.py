@@ -6,7 +6,8 @@ from torchvision import transforms
 import time
 import cv2
 
-STYLE_TRANSFORM_PATH = "transforms/udnie.pth"
+STYLE_TRANSFORM_PATH = "models/pop_art/checkpoint_20695.pth"
+# STYLE_TRANSFORM_PATH = "transforms/tokyo_ghoul.pth"
 PRESERVE_COLOR = False
 
 
@@ -20,20 +21,23 @@ def stylize():
     net = net.to(device)
 
     with torch.no_grad():
-        while (1):
-            torch.cuda.empty_cache()
-            print("Stylize Image~ Press Ctrl+C and Enter to close the program")
-            content_image_path = input("Enter the image path: ")
-            content_image = utils.load_image(content_image_path)
-            starttime = time.time()
-            content_tensor = utils.itot(content_image).to(device)
-            generated_tensor = net(content_tensor)
-            generated_image = utils.ttoi(generated_tensor.detach())
-            if (PRESERVE_COLOR):
-                generated_image = utils.transfer_color(content_image, generated_image)
-            print("Transfer Time: {}".format(time.time() - starttime))
-            utils.show(generated_image)
-            utils.saveimg(generated_image, "helloworld.jpg")
+        torch.cuda.empty_cache()
+        print("Stylize Image~ Press Ctrl+C and Enter to close the program")
+        content_image_path = r'/Users/janekbecker/Pictures/20180305_172930.jpeg'  # input("Enter the image path: ")
+        # content_image_path = r'/Users/janekbecker/Pictures/DSCF0626.jpeg'  # input("Enter the image path: ")
+        content_image = utils.load_image(content_image_path)
+        content_image = cv2.resize(content_image, (600, 400))
+        starttime = time.time()
+        content_tensor = utils.itot(content_image).to(device)
+        generated_tensor = net(content_tensor)
+        generated_tensor = torch.concat([content_tensor, generated_tensor], dim=2)
+        generated_image = utils.ttoi(generated_tensor.detach())
+        if (PRESERVE_COLOR):
+            generated_image = utils.transfer_color(content_image, generated_image)
+        print("Transfer Time: {}".format(time.time() - starttime))
+
+        utils.show(generated_image)
+        # utils.saveimg(generated_image, "helloworld.jpg")
 
 
 def stylize_folder_single(style_path, content_folder, save_folder):

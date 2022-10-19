@@ -1,3 +1,7 @@
+#! /usr/bin/python
+#
+import os
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,6 +12,7 @@ import numpy as np
 import time
 
 from tqdm import tqdm
+from pathlib import Path
 
 import vgg
 import transformer
@@ -17,7 +22,24 @@ import utils
 TRAIN_IMAGE_SIZE = 256
 DATASET_PATH = "dataset"
 NUM_EPOCHS = 1
-STYLE_IMAGE_PATH = "images/mosaic.jpg"
+STYLE_IMAGE_PATHS = [
+    # "images/van_gogh_1.jpg",
+    # "images/asterix.jpg",
+    "images/dali_4.jpg",
+    "images/dali_5.jpg",
+    "images/dali_6.jpg",
+    "images/dali_7.jpg",
+    "images/dali_8.jpg",
+    "images/dali_9.jpg",
+    "images/gta.jpg",
+    "images/hongkong.jpg",
+    "images/impoerialist.jpg",
+    "images/kahlo_1.jpg",
+    "images/kandinsky_1.jpg",
+    "images/picasso_1.jpg",
+    "images/van_gogh_1.jpg",
+    "images/van_gogh_2.jpg",
+]
 BATCH_SIZE = 4
 CONTENT_WEIGHT = 17  # 17
 STYLE_WEIGHT = 50  # 25
@@ -29,7 +51,12 @@ SEED = 35
 PLOT_LOSS = 1
 
 
-def train():
+def train(style_path):
+    save_model_path = str(Path(SAVE_MODEL_PATH) / Path(style_path).stem) + '/'
+    os.makedirs(save_model_path, exist_ok=True)
+    save_image_path = str(Path(SAVE_IMAGE_PATH) / Path(style_path).stem) + '/'
+    os.makedirs(save_image_path, exist_ok=True)
+
     # Seeds
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED)
@@ -55,7 +82,7 @@ def train():
 
     # Get Style Features
     imagenet_neg_mean = torch.tensor([-103.939, -116.779, -123.68], dtype=torch.float32).reshape(1, 3, 1, 1).to(device)
-    style_image = utils.load_image(STYLE_IMAGE_PATH)
+    style_image = utils.load_image(style_path)
     style_tensor = utils.itot(style_image).to(device)
     style_tensor = style_tensor.add(imagenet_neg_mean)
     b, c, h, w = style_tensor.shape
@@ -127,14 +154,14 @@ def train():
                 print("Time elapsed:\t{} seconds".format(time.time() - start_time))
 
                 # Save Model
-                checkpoint_path = SAVE_MODEL_PATH + "checkpoint_" + str(batch_count - 1) + ".pth"
+                checkpoint_path = save_model_path + "checkpoint_" + str(batch_count - 1) + ".pth"
                 torch.save(transformer_network.state_dict(), checkpoint_path)
                 print("Saved TransformerNetwork checkpoint file at {}".format(checkpoint_path))
 
                 # Save sample generated image
                 sample_tensor = generated_batch[0].clone().detach().unsqueeze(dim=0)
                 sample_image = utils.ttoi(sample_tensor.clone().detach())
-                sample_image_path = SAVE_IMAGE_PATH + "sample0_" + str(batch_count - 1) + ".png"
+                sample_image_path = save_image_path + "sample0_" + str(batch_count - 1) + ".png"
                 utils.saveimg(sample_image, sample_image_path)
                 print("Saved sample tranformed image at {}".format(sample_image_path))
 
@@ -160,7 +187,7 @@ def train():
     # Save TransformerNetwork weights
     transformer_network.eval()
     transformer_network.cpu()
-    final_path = SAVE_MODEL_PATH + "transformer_weight.pth"
+    final_path = save_model_path + "transformer_weight.pth"
     print("Saving TransformerNetwork weights at {}".format(final_path))
     torch.save(transformer_network.state_dict(), final_path)
     print("Done saving final model")
@@ -170,4 +197,8 @@ def train():
         utils.plot_loss_hist(content_loss_history, style_loss_history, total_loss_history)
 
 
-train()
+for style_image_path in STYLE_IMAGE_PATHS:
+    try:
+        train(style_image_path)
+    except Exception as e:
+        print(e)
