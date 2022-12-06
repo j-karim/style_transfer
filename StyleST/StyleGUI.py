@@ -1,5 +1,5 @@
 import os
-
+import bcrypt
 import cv2
 import numpy as np
 
@@ -19,28 +19,36 @@ from FastStyleTransfer import utils
 
 
 def write():
-    st.header('Frohe Weihnachten my love! :)')
-    image_blob = st.file_uploader('Upload style photo', type=['png', 'jpg', 'jpeg'])
+    st.title('Frohe Weihnachten my love! :)')
+
+    password = st.text_input('Input password', type='password')
+    if not check_password(password):
+        return
+    image_blob = st.file_uploader('Upload input photo', type=['png', 'jpg', 'jpeg'])
 
     models = sorted(get_list_of_models())
-    model_key = st.selectbox('Select style model', [x.parent.stem for x in models])
+    model_key = st.selectbox('Select style', [x.parent.stem for x in models])
     model_path = [x for x in models if x.parent.stem == model_key][0]
-
-    style_image = load_style_image(model_key)
-    st.image(style_image)
-
-
 
     if image_blob is None:
         return
     image = load_image(image_blob)
+    st.header('Input image')
     st.image(image)
 
+    style_image = load_style_image(model_key)
+    st.header('Style image')
+    st.image(style_image)
 
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     model = load_model(model_path, device)
     stylized_image = infer_image(image, model, device)
+    st.header('Stylized image')
     st.image(stylized_image)
+
+    show_present_btn = st.button('Ok reicht jetzt, zeig mir das Geschenk :P')
+    if show_present_btn:
+        show_present()
 
 
 @st.cache
@@ -89,6 +97,21 @@ def infer_image(image, model, device):
     generated_image = utils.ttoi(generated_tensor.detach())
     generated_image = np.clip(generated_image / 255.0, 0.0, 1.0)
     return generated_image
+
+
+def check_password(pw: str):
+    encoded_pw = pw.encode()
+    salt = b'$2b$12$8iIIIT//hLqNX5ID9Grplu'
+    hashed = bcrypt.hashpw(encoded_pw, salt)
+    if hashed == b'$2b$12$8iIIIT//hLqNX5ID9GrpluqtskeieRmGGVZy2MPOOhKClZa86Eus.':
+        return True
+    return False
+
+
+def show_present():
+    st.header('Geschenk')
+    st.text('Hey, frohe Weihnachten! :) Ist das Kunst oder kann das weg? Well i don\'t know! Aber das Geschenk ist ......... \n\n\n\n\n\n\n'
+            'Kunst. ')
 
 
 write()
