@@ -110,7 +110,7 @@ def check_password(pw: str):
 
 def show_present():
     st.header('Geschenk')
-    st.text('Hey, frohe Weihnachten! :) Ist das Kunst oder kann das weg? Well i don\'t know! Aber das Geschenk ist ......... \n\n\n\n\n\n\n'
+    st.write('Hey, frohe Weihnachten! :) Ist das Kunst oder kann das weg? Well i don\'t know! Aber das Geschenk ist ......... \n\n\n\n\n\n\n'
             'Kunst. ')
 
 
