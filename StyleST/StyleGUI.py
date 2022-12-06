@@ -1,6 +1,5 @@
 import os
 import bcrypt
-import cv2
 import numpy as np
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -62,7 +61,6 @@ def get_list_of_models():
 @st.cache
 def load_image(image_blob):
     image = Image.open(image_blob)
-    image = np.asarray(image)
     return image
 
 
@@ -89,8 +87,8 @@ def load_model(model_path, device):
 def infer_image(image, model, device):
 
     new_img_width = 600
-    new_img_height = new_img_width / image.shape[1] * image.shape[0]
-    image = cv2.resize(image, (int(new_img_width), int(new_img_height)))
+    new_img_height = new_img_width / image.width * image.height
+    image = image.resize((int(new_img_width), int(new_img_height)))
     content_tensor = utils.itot(image).to(device)
 
     generated_tensor = model(content_tensor)
