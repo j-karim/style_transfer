@@ -218,11 +218,13 @@ if __name__ == '__main__':
 
 
     loader = transforms.Compose([
-        transforms.Resize(imsize),  # scale imported image
+        transforms.Resize(imsize), # scale imported image
+        transforms.CenterCrop(imsize),
         transforms.ToTensor()])  # transform it into a torch tensor
     style_img = image_loader(Path(__file__).parent / "./data/images/picasso.jpeg")
+    style_img = image_loader('/Users/janekbecker/Documents/pycharm_projects/NeuralStyleTransfer/FastStyleTransfer/images/dali_6.jpg')
 
-    content_img = image_loader(Path(__file__).parent / "./data/images/dancing.jpeg")
+    content_img = image_loader("/Users/janekbecker/Pictures/DSCF0626.jpeg")
 
     assert style_img.size() == content_img.size(), \
         "we need to import style and content images of the same size"

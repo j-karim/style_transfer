@@ -2,4 +2,5 @@ FastStyleTransfer/images/out/**/*
 FastStyleTransfer/images/results/**/*
 FastStyleTransfer/images/.ypynb*
 FastStyleTransfer/models/**/*/*checkpoint_*.pth
-*.pyc 
+*.pyc
+.idea

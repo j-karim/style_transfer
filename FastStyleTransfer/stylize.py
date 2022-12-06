@@ -6,25 +6,26 @@ from torchvision import transforms
 import time
 import cv2
 
-STYLE_TRANSFORM_PATH = "models/pop_art/checkpoint_20695.pth"
+STYLE_TRANSFORM_PATH = "models/picasso_1/checkpoint_20695.pth"
 # STYLE_TRANSFORM_PATH = "transforms/tokyo_ghoul.pth"
-PRESERVE_COLOR = False
+# PRESERVE_COLOR = False
 
 
-def stylize():
+def stylize(style_transform_path, preserve_color=False):
     # Device
     device = ("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load Transformer Network
     net = transformer.TransformerNetwork()
-    net.load_state_dict(torch.load(STYLE_TRANSFORM_PATH, map_location=device))
+    net.load_state_dict(torch.load(style_transform_path, map_location=device))
     net = net.to(device)
 
     with torch.no_grad():
         torch.cuda.empty_cache()
         print("Stylize Image~ Press Ctrl+C and Enter to close the program")
-        content_image_path = r'/Users/janekbecker/Pictures/20180305_172930.jpeg'  # input("Enter the image path: ")
-        # content_image_path = r'/Users/janekbecker/Pictures/DSCF0626.jpeg'  # input("Enter the image path: ")
+        content_image_path = r'images/up-diliman.jpg'
+        # content_image_path = r'/Users/janekbecker/Pictures/20180305_172930.jpeg'  # input("Enter the image path: ")
+        content_image_path = r'/Users/janekbecker/Pictures/DSCF0626.jpeg'  # input("Enter the image path: ")
         content_image = utils.load_image(content_image_path)
         content_image = cv2.resize(content_image, (600, 400))
         starttime = time.time()
@@ -32,15 +33,16 @@ def stylize():
         generated_tensor = net(content_tensor)
         generated_tensor = torch.concat([content_tensor, generated_tensor], dim=2)
         generated_image = utils.ttoi(generated_tensor.detach())
-        if (PRESERVE_COLOR):
+        if preserve_color:
             generated_image = utils.transfer_color(content_image, generated_image)
         print("Transfer Time: {}".format(time.time() - starttime))
 
         utils.show(generated_image)
         # utils.saveimg(generated_image, "helloworld.jpg")
+        return generated_image
 
 
-def stylize_folder_single(style_path, content_folder, save_folder):
+def stylize_folder_single(style_path, content_folder, save_folder, preserve_color=False):
     """
     Reads frames/pictures as follows:
 
@@ -80,7 +82,7 @@ def stylize_folder_single(style_path, content_folder, save_folder):
             # Generate image
             generated_tensor = net(content_tensor)
             generated_image = utils.ttoi(generated_tensor.detach())
-            if (PRESERVE_COLOR):
+            if preserve_color:
                 generated_image = utils.transfer_color(content_image, generated_image)
             # Save image
             utils.saveimg(generated_image, save_folder + image_name)
@@ -141,4 +143,4 @@ def stylize_folder(style_path, folder_containing_the_content_folder, save_folder
 
 
 if __name__ == '__main__':
-    stylize()
+    stylize(STYLE_TRANSFORM_PATH)

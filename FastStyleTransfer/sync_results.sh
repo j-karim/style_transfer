@@ -1,4 +1,4 @@
-instance_ip=104.171.203.223
+instance_ip=104.171.203.21
 
 src_base_dir_1=NeuralStyleTransfer/FastStyleTransfer/images
 dst_base_dir_1=~/Documents/pycharm_projects/NeuralStyleTransfer/FastStyleTransfer

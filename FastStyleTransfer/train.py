@@ -33,7 +33,7 @@ STYLE_IMAGE_PATHS = [
     "images/dali_9.jpg",
     "images/gta.jpg",
     "images/hongkong.jpg",
-    "images/impoerialist.jpg",
+    "images/imperialist.jpg",
     "images/kahlo_1.jpg",
     "images/kandinsky_1.jpg",
     "images/picasso_1.jpg",
